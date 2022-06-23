@@ -596,8 +596,7 @@ class Connection(BaseConnection):
         reader, writer = await exec_with_timeout(
             asyncio.open_connection(host=self.host,
                                     port=self.port,
-                                    ssl=self.ssl_context,
-                                    loop=self.loop),
+                                    ssl=self.ssl_context),
             self._connect_timeout,
             loop=self.loop
         )
@@ -644,8 +643,7 @@ class UnixDomainSocketConnection(BaseConnection):
     async def _connect(self):
         reader, writer = await exec_with_timeout(
             asyncio.open_unix_connection(path=self.path,
-                                         ssl=self.ssl_context,
-                                         loop=self.loop),
+                                         ssl=self.ssl_context),
             self._connect_timeout,
             loop=self.loop
         )
