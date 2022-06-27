@@ -17,7 +17,7 @@ from aredis.exceptions import (ConnectionError, TimeoutError,
                                InvalidResponse, AskError,
                                MovedError, TryAgainError,
                                ClusterDownError, ClusterCrossSlotError)
-from aredis.utils import b, nativestr, LOOP_DEPRECATED
+from aredis.utils import b, nativestr
 
 try:
     import hiredis
@@ -33,12 +33,9 @@ SYM_LF = b('\n')
 SYM_EMPTY = b('')
 
 
-async def exec_with_timeout(coroutine, timeout, *, loop=None):
+async def exec_with_timeout(coroutine, timeout):
     try:
-        if LOOP_DEPRECATED:
-            return await asyncio.wait_for(coroutine, timeout)
-        else:
-            return await asyncio.wait_for(coroutine, timeout, loop=loop)
+        return await asyncio.wait_for(coroutine, timeout)
     except asyncio.TimeoutError as exc:
         raise TimeoutError(exc)
 
@@ -448,7 +445,7 @@ class BaseConnection:
 
     async def read_response(self):
         try:
-            response = await exec_with_timeout(self._parser.read_response(), self._stream_timeout, loop=self.loop)
+            response = await exec_with_timeout(self._parser.read_response(), self._stream_timeout)
             self.last_active_at = time.time()
         except TimeoutError:
             self.disconnect()
@@ -597,8 +594,7 @@ class Connection(BaseConnection):
             asyncio.open_connection(host=self.host,
                                     port=self.port,
                                     ssl=self.ssl_context),
-            self._connect_timeout,
-            loop=self.loop
+            self._connect_timeout
         )
         self._reader = reader
         self._writer = writer
@@ -644,8 +640,7 @@ class UnixDomainSocketConnection(BaseConnection):
         reader, writer = await exec_with_timeout(
             asyncio.open_unix_connection(path=self.path,
                                          ssl=self.ssl_context),
-            self._connect_timeout,
-            loop=self.loop
+            self._connect_timeout
         )
         self._reader = reader
         self._writer = writer
